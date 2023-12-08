@@ -1,0 +1,5 @@
+filepath,output,flag,username,timestamp
+/Users/chrisrodriguez/Downloads/User interface/flagged/filepath/c24f0e3c14f76504d6ed21b028411c89527875c9/tmporp7lcga.wav," Seek immediate medical attention.
+
+Sources:
+{'query': 'Heart attack.', 'result': ' Seek immediate medical attention.', 'source_documents': [Document(page_content='Heat Exhaustion/Heat Stroke,  Move to a cooler place and rest. Drink water and cool down with damp cloths or a cool bath. Heat stroke is a medical emergency; call 911 immediately.\n\nBroken Bones, Keep the injured area immobilized and supported. Apply a cold compress to reduce swelling. Seek immediate medical attention.', metadata={'source': 'medical_data/first-aid.txt'})]}✅  ModMed Certified",,,2023-10-01 20:49:10.409682
