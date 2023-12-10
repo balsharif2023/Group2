@@ -4,13 +4,12 @@ import openai
 import pinecone
 import requests
 import gradio as gr
-from gtts import gTTS
 import torch
+from gtts import gTTS
 from dotenv import load_dotenv
 from langchain.llms import OpenAI
 from langchain import PromptTemplate
 from langchain.vectorstores import Chroma
-from sentence_transformers import SentenceTransformer
 from requests.exceptions import JSONDecodeError
 from transformers import AutoTokenizer, AutoModel
 from langchain.embeddings import OpenAIEmbeddings
@@ -48,7 +47,6 @@ retriever = vectordb.as_retriever(search_kwargs={"k": 2})
 bot_template = '''I want you to act as a medicine advisor for people. 
 Explain in simple words how to treat a {medical_complication}'''
 
-
 tokenizer = AutoTokenizer.from_pretrained("medicalai/ClinicalBERT")
 model = AutoModel.from_pretrained("medicalai/ClinicalBERT")
 model_path = "medicalai/ClinicalBERT"
@@ -80,16 +78,16 @@ def preprocess_text(text):
     text = text.lower()
     text = re.sub(r"[^a-zA-Z0-9\s]", "", text)
     text = re.sub(r"\s+", " ", text).strip()
-    clear_text = text
 
-    inputs = tokenizer(clear_text, return_tensors="pt", padding=True, truncation=True, max_length=512)
+    inputs = tokenizer(text, return_tensors="pt", padding=True, truncation=True, max_length=512)
 
     with torch.no_grad():
         outputs = model(**inputs)
         embeddings = outputs.last_hidden_state
-        embeddings_list = embeddings.squeeze().tolist() 
+    
+    embeddings_list = embeddings.squeeze().tolist() 
 
-        data_to_insert = [("id_{}".format(i), vec) for i, vec in enumerate(embeddings_list)]
+    data_to_insert = [("id_{}".format(i), vec) for i, vec in enumerate(embeddings_list)]
 
     return data_to_insert[1][1]
 
@@ -103,13 +101,21 @@ pinecone_index = pinecone.Index(index_name=index_name)
 
 # Define function to retrieve embeddings from Pinecone
 def retrieve_embeddings_from_pinecone(query):
-    results = pinecone_index.query(
+    response = pinecone_index.query(
         vector=query,
-        top_k=1,
+        top_k=3,
         include_values=True
     )
-    retrieved_embeddings = results[0].vectors
-    return retrieved_embeddings
+    
+
+    # Assuming 'response' is your Pinecone query response
+    matches = response.get("matches", [])
+
+    # Extracting only the "values" field from each match
+    values_list = [match.get("values", []) for match in matches]
+
+    # Printing the result
+    return values_list
 
 
 # Function to process user input
@@ -247,9 +253,8 @@ def chatbot(microphone_filepath, upload_filepath, feedback):
         llm_response = qa_chain(chatgpt_prompt)
         prompt_response = chain1(user_input)
 
-        #r_embeddings = retrieve_embeddings_from_pinecone(preprocess_text(user_input))
-
-        #print(r_embeddings)
+        r_embeddings = retrieve_embeddings_from_pinecone(preprocess_text(user_input))
+        print(r_embeddings)
         
         f_modMed_response, f_chatgpt_response = process_llm_response(llm_response, prompt_response)
         ans = process_feedback(feedback, global_filepath)
